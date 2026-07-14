@@ -45,14 +45,14 @@ const testEmailConfig = async () => {
     // Test 2: Send test email
     console.log('📧 Sending test email...');
     const testEmail = await transporter.sendMail({
-      from: `"Samskruthi Foods Test" <${process.env.SMTP_USER}>`,
+      from: `"Sai Lakshmi Home Foods Test" <${process.env.SMTP_USER}>`,
       to: process.env.SMTP_USER, // Send to self
-      subject: 'Email Configuration Test - Samskruthi Foods',
+      subject: 'Email Configuration Test - Sai Lakshmi Home Foods',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4;">
           <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #800000;">✅ Email Configuration Working!</h1>
-            <p>This is a test email from Samskruthi Foods backend.</p>
+            <p>This is a test email from Sai Lakshmi Home Foods backend.</p>
             <p>If you received this, your SMTP configuration is correct.</p>
             <hr>
             <p style="color: #666; font-size: 12px;">

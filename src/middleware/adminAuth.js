@@ -2,12 +2,12 @@ import jwt from 'jsonwebtoken';
 
 // Hardcoded admin credentials
 const ADMIN_CREDENTIALS = {
-  mobile: '8500677977',
-  password: 'samskruthihomefoods123'
+  mobile: '9966539144',
+  password: 'sailakshmihomefoods123'
 };
 
 // JWT Secret - should be in .env in production
-const JWT_SECRET = process.env.JWT_SECRET || 'samskruthi-admin-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'sailakshmi-admin-secret-key-2024';
 const JWT_EXPIRES_IN = '7d';
 
 // Verify admin JWT token middleware

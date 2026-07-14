@@ -1,5 +1,5 @@
 /**
- * Email Service for Samskruthi
+ * Email Service for Sai Lakshmi Home Foods
  * Handles transactional emails with branded HTML templates
  *
  * Required environment variables:
@@ -8,7 +8,7 @@
  * - SMTP_USER (Gmail address)
  * - SMTP_PASS (Gmail App Password)
  * - SMTP_FROM_EMAIL (default: same as SMTP_USER)
- * - SMTP_FROM_NAME (default: Samskruthi)
+ * - SMTP_FROM_NAME (default: Sai Lakshmi Home Foods)
  */
 
 import nodemailer from 'nodemailer';
@@ -23,16 +23,16 @@ const BRAND_COLORS = {
 };
 
 const BUSINESS_INFO = {
-  name: 'Samskruthi Home Foods',
-  logoUrl: 'https://res.cloudinary.com/ddrul5cxk/image/upload/v1775983611/samskruthi_pfp_awt66q.jpg',
-  website: process.env.PUBLIC_WEBSITE_URL || 'https://www.samskruthihomefoods.com',
-  contactUrl: process.env.PUBLIC_CONTACT_URL || 'https://www.samskruthihomefoods.com',
-  privacyUrl: process.env.PUBLIC_PRIVACY_URL || 'https://www.samskruthihomefoods.com/privacy-policy',
-  unsubscribeUrl: process.env.PUBLIC_UNSUBSCRIBE_URL || 'https://www.samskruthihomefoods.com/unsubscribe',
-  ordersUrl: process.env.PUBLIC_ORDERS_URL || 'https://www.samskruthihomefoods.com/orders',
-  address: '41, Road No. 1, Srinivasa Nagar Bank Colony, Kanuru, Andhra Pradesh 520008',
-  email: 'manasamskruthihomefoods@gmail.com',
-  phone: '085006 77977'
+  name: 'Sai Lakshmi Home Foods',
+  logoUrl: 'https://res.cloudinary.com/ddrul5cxk/image/upload/sailakshmi.webp',
+  website: process.env.PUBLIC_WEBSITE_URL || 'https://www.sailakshmihomefoods.com',
+  contactUrl: process.env.PUBLIC_CONTACT_URL || 'https://www.sailakshmihomefoods.com',
+  privacyUrl: process.env.PUBLIC_PRIVACY_URL || 'https://www.sailakshmihomefoods.com/privacy-policy',
+  unsubscribeUrl: process.env.PUBLIC_UNSUBSCRIBE_URL || 'https://www.sailakshmihomefoods.com/unsubscribe',
+  ordersUrl: process.env.PUBLIC_ORDERS_URL || 'https://www.sailakshmihomefoods.com/orders',
+  address: '50-27-14, Gurudwara Up Road, Near Eenadu Junction, Opp. Electrical Substation, Akkayapalem, Balayya Sastri Layout, Seethammadara, Visakhapatnam, Andhra Pradesh 530013',
+  email: 'sailakshmihomefoods@gmail.com',
+  phone: '099665 39144'
 };
 
 const EMAIL_FONT_FAMILY = 'Arial, Helvetica, sans-serif';
@@ -453,7 +453,7 @@ const sendEmail = async (to, subject, html) => {
         html,
         headers: {
           'X-Priority': '3',
-          'X-Mailer': 'Samskruthi Mailer'
+          'X-Mailer': 'Sai Lakshmi Mailer'
         }
       }),
       new Promise((_, reject) =>
@@ -477,7 +477,7 @@ const sendEmail = async (to, subject, html) => {
             html,
             headers: {
               'X-Priority': '3',
-              'X-Mailer': 'Samskruthi Mailer'
+              'X-Mailer': 'Sai Lakshmi Mailer'
             }
           }),
           new Promise((_, reject) =>
@@ -662,11 +662,11 @@ export const sendDeliveredEmail = async (order) => {
 
 /**
  * 4) ORDER CANCELLED
- * Subject: "Your order update from Samskruthi Home Foods"
+ * Subject: "Your order update from Sai Lakshmi Home Foods"
  * Note: kept as standalone template function without changing existing status email wiring.
  */
 export const sendOrderCancelledEmail = async (order) => {
-  const subject = 'Your order update from Samskruthi Home Foods';
+  const subject = 'Your order update from Sai Lakshmi Home Foods';
   const customerName = order?.customer?.name || 'Customer';
   const customerEmail = order?.customer?.email;
 
@@ -713,7 +713,7 @@ export const sendProductUpdateEmail = async (product, changes) => {
     if (changes.pricePerKg !== undefined) changeDescriptions.push(`price updated to ₹${changes.pricePerKg}/kg`);
     if (changes.isActive !== undefined) changeDescriptions.push(`is now ${changes.isActive ? 'active' : 'inactive'}`);
 
-    const subject = `${product.name} Update from Samskruthi Home Foods`;
+    const subject = `${product.name} Update from Sai Lakshmi Home Foods`;
     const adminEmail = process.env.ADMIN_EMAIL || 'niva2026.in@gmail.com';
     
     // Build info table

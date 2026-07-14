@@ -7,7 +7,7 @@ const testMongoConnection = async () => {
   try {
     console.log('\n🧪 ===== MONGODB CONNECTION TEST =====\n');
     
-    const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/samskruthi';
+    const uri = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/sailakshmi';
     console.log('📍 Connection URI:', uri.includes('@') ? uri.replace(/:([^:@]+)@/, ':***@') : uri);
     
     console.log('\n🔌 Connecting...');
@@ -76,7 +76,7 @@ const testMongoConnection = async () => {
     console.error('      Linux: sudo systemctl start mongod');
     console.error('   2. Check MONGODB_URI in .env file');
     console.error('   3. Verify connection string format');
-    console.error('      Example: mongodb://localhost:27017/samskruthi');
+    console.error('      Example: mongodb://localhost:27017/sailakshmi');
     console.error('\n');
     process.exit(1);
   }

@@ -19,7 +19,7 @@ dotenv.config();
 
 console.log('\n');
 console.log('╔════════════════════════════════════════════════════════╗');
-console.log('║       🚀 SAMSKRUTHI FOODS API SERVER                   ║');
+console.log('║       🚀 SAI LAKSHMI HOME FOODS API SERVER             ║');
 console.log('╚════════════════════════════════════════════════════════╝');
 console.log('\n');
 

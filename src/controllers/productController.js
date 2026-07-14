@@ -9,37 +9,18 @@ const DEFAULT_SEARCH_LIMIT = 6;
 const MAX_LIMIT = 100;
 
 const INITIAL_PRODUCTS = [
-  { productId: 1, name: 'Mango Avakaya', category: 'Veg Pickles', pricePerKg: 750 },
-  { productId: 2, name: 'Gongura Pickle', category: 'Veg Pickles', pricePerKg: 750 },
-  { productId: 10, name: 'Ginger Pickle', category: 'Veg Pickles', pricePerKg: 750 },
-  { productId: 11, name: 'Lemon Pickle', category: 'Veg Pickles', pricePerKg: 750 },
-  { productId: 12, name: 'Red Chilli Pickle', category: 'Veg Pickles', pricePerKg: 750 },
-  { productId: 13, name: 'Usirikaya Pickle', category: 'Veg Pickles', pricePerKg: 750 },
-  { productId: 3, name: 'Chicken Pickle', category: 'Non Veg Pickles', pricePerKg: 1999 },
-  { productId: 4, name: 'Prawns Pickle', category: 'Non Veg Pickles', pricePerKg: 2499 },
-  { productId: 14, name: 'Mutton Boneless Pickle', category: 'Non Veg Pickles', pricePerKg: 2799 },
-  { productId: 7, name: 'Kandi Podi', category: 'Podis', pricePerKg: 1400 },
-  { productId: 8, name: 'Karvepaku Podi', category: 'Podis', pricePerKg: 1400 },
-  { productId: 9, name: 'Kobbari Podi', category: 'Podis', pricePerKg: 1400 },
-  { productId: 101, name: 'Mixture', category: 'Snacks', pricePerKg: 550 },
-  { productId: 102, name: 'Murukulu', category: 'Snacks', pricePerKg: 550 },
-  { productId: 103, name: 'Ribbon Pakodi', category: 'Snacks', pricePerKg: 550 },
-  { productId: 201, name: 'Ariselu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 202, name: 'Bandharu Laddu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 203, name: 'Boondhi Achu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 204, name: 'Boondhi Laddu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 205, name: 'Boorelu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 206, name: 'Cashew Achu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 207, name: 'Kajji Kayalu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 208, name: 'Mysore Pak', category: 'Sweets', pricePerKg: 799 },
-  { productId: 209, name: 'Nuvvundalu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 210, name: 'Palli Undalu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 211, name: 'Sanna Boondhi Laddu', category: 'Sweets', pricePerKg: 799 },
-  { productId: 212, name: 'Sunnunda', category: 'Sweets', pricePerKg: 799 },
+  // ── Only products with real photos ──────────────────────────────────────────
+  { productId: 1,   name: 'Mango Avakaya',   category: 'Veg Pickles', pricePerKg: 800 },
+  { productId: 2,   name: 'Gongura Pickle',  category: 'Veg Pickles', pricePerKg: 800 },
+  { productId: 7,   name: 'Kandi Podi',      category: 'Podis',       pricePerKg: 1400 },
+  { productId: 8,   name: 'Karvepaku Podi',  category: 'Podis',       pricePerKg: 1400 },
+  { productId: 101, name: 'Mixture',         category: 'Snacks',      pricePerKg: 600 },
+  { productId: 208, name: 'Mysore Pak',      category: 'Sweets',      pricePerKg: 900 },
+  { productId: 212, name: 'Sunnunda',        category: 'Sweets',      pricePerKg: 900 },
 ];
 
-const BEST_SELLER_IDS = [1, 2, 3, 4, 7, 8, 204, 102];
-const YOU_MAY_ALSO_LIKE_IDS = [9, 10, 11, 12, 208, 101];
+const BEST_SELLER_IDS = [1, 2, 7, 8, 101, 208, 212];
+const YOU_MAY_ALSO_LIKE_IDS = [1, 2, 7, 8, 101, 208, 212];
 
 let hasCheckedSeedState = false;
 

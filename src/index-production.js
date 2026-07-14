@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════════
 //               PRODUCTION-READY EXPRESS SERVER
-//               Samskruthi Foods Backend
+//               Sai Lakshmi Home Foods Backend
 // ═══════════════════════════════════════════════════════════════════
 
 import express from 'express';
@@ -21,7 +21,7 @@ import { apiCompression } from './middleware/compression.js';
 dotenv.config();
 
 console.log('\n╔════════════════════════════════════════════════════════╗');
-console.log('║       🚀 SAMSKRUTHI FOODS API SERVER                   ║');
+console.log('║       🚀 SAI LAKSHMI HOME FOODS API SERVER             ║');
 console.log('╚════════════════════════════════════════════════════════╝\n');
 
 // ═══════════════════════════════════════════════════════════════════

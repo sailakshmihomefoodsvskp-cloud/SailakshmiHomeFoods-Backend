@@ -1,7 +1,7 @@
 {
-  "name": "samskruthi-backend",
+  "name": "sailakshmi-backend",
   "version": "1.0.0",
-  "description": "Backend API for Samskruthi Foods",
+  "description": "Backend API for Sai Lakshmi Home Foods",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
