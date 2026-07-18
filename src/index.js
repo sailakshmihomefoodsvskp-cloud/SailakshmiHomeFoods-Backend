@@ -83,30 +83,59 @@ app.use((_req, res, next) => {
   next();
 });
 
+// ── CORS ─────────────────────────────────────────────────────────────────────
+//
+// Origin allowlist.  FRONTEND_URL (set in Vercel env vars) is the primary
+// source — it is a comma-separated list of origins.  The hardcoded fallback
+// covers all known production + dev origins so the server works even if the
+// env var is not yet configured on Vercel.
+//
+// IMPORTANT: never use "*" — credentials (Authorization header, cookies) are
+// sent on every authenticated request, and browsers block "*" + credentials.
+
+const PRODUCTION_ORIGINS = [
+  'https://www.sailakshmihomefoods.in',
+  'https://sailakshmihomefoods.in',
+  'https://sailakshmi-home-foods-frontend.vercel.app',
+];
+
+const DEV_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+];
+
 const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim())
-  : [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://sailakshmi-home-foods-frontend.vercel.app',
-      'https://sailakshmihomefoods.in',
-      'https://www.sailakshmihomefoods.in',
-    ];
+  ? process.env.FRONTEND_URL.split(',').map((u) => u.trim()).filter(Boolean)
+  : [...PRODUCTION_ORIGINS, ...DEV_ORIGINS];
+
+// Always ensure the production domain is present, even if FRONTEND_URL is set
+// (guards against an accidental omission in the Vercel dashboard)
+for (const origin of PRODUCTION_ORIGINS) {
+  if (!allowedOrigins.includes(origin)) allowedOrigins.push(origin);
+}
+
+console.log('[startup] CORS allowed origins:', allowedOrigins);
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow server-to-server requests (no Origin header) and whitelisted origins
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow server-to-server / curl / Postman (no Origin header)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
     console.warn(`[CORS] Blocked request from origin: ${origin}`);
-    callback(new Error(`Origin '${origin}' is not allowed by CORS.`));
+    callback(new Error(`CORS: origin '${origin}' is not allowed.`));
   },
   credentials: true,
-  methods:  ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods:  ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Type'],
-  optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
+  optionsSuccessStatus: 200, // IE11 chokes on 204
+  maxAge: 86400,             // Cache preflight for 24 h
 };
 
+// Mount CORS before every other middleware so preflight OPTIONS requests
+// are handled immediately and never reach route handlers or rate limiters.
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
