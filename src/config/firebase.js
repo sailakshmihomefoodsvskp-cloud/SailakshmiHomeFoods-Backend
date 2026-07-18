@@ -197,4 +197,19 @@ const initializeFirebase = () => {
   return admin;
   };
 
+/**
+ * Verify a Firebase ID token (used by auth middleware).
+ */
+export const verifyIdToken = async (token) => {
+  if (!isInitialized) {
+    throw new Error('Firebase not initialized');
+  }
+  try {
+    return await admin.auth().verifyIdToken(token);
+  } catch (error) {
+    console.error('❌ Token verification failed:', error.message);
+    throw error;
+  }
+};
+
 export { admin, initializeFirebase, isFirebaseInitialized, getAdmin };

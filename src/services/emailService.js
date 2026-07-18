@@ -24,14 +24,14 @@ const BRAND_COLORS = {
 
 const BUSINESS_INFO = {
   name: 'Sai Lakshmi Home Foods',
-  logoUrl: 'https://res.cloudinary.com/ddrul5cxk/image/upload/sailakshmi.webp',
-  website: process.env.PUBLIC_WEBSITE_URL || 'https://www.sailakshmihomefoods.com',
-  contactUrl: process.env.PUBLIC_CONTACT_URL || 'https://www.sailakshmihomefoods.com',
-  privacyUrl: process.env.PUBLIC_PRIVACY_URL || 'https://www.sailakshmihomefoods.com/privacy-policy',
-  unsubscribeUrl: process.env.PUBLIC_UNSUBSCRIBE_URL || 'https://www.sailakshmihomefoods.com/unsubscribe',
-  ordersUrl: process.env.PUBLIC_ORDERS_URL || 'https://www.sailakshmihomefoods.com/orders',
-  address: '50-27-14, Gurudwara Up Road, Near Eenadu Junction, Opp. Electrical Substation, Akkayapalem, Balayya Sastri Layout, Seethammadara, Visakhapatnam, Andhra Pradesh 530013',
-  email: 'sailakshmihomefoods@gmail.com',
+  logoUrl: process.env.LOGO_URL || 'https://cdn.sailakshmihomefoods.in/Logo/sailakshmi.webp',
+  website: process.env.PUBLIC_WEBSITE_URL || 'https://www.sailakshmihomefoods.in',
+  contactUrl: process.env.PUBLIC_CONTACT_URL || 'https://www.sailakshmihomefoods.in',
+  privacyUrl: process.env.PUBLIC_PRIVACY_URL || 'https://www.sailakshmihomefoods.in/privacy-policy',
+  unsubscribeUrl: process.env.PUBLIC_UNSUBSCRIBE_URL || 'https://www.sailakshmihomefoods.in/unsubscribe',
+  ordersUrl: process.env.PUBLIC_ORDERS_URL || 'https://www.sailakshmihomefoods.in/orders',
+  address: '50-27-14, Gurudwara Up Road, Opp. Electrical Substation, Akkayapalem, Balayya Sastri Layout, Seethammadara, Visakhapatnam, Andhra Pradesh 530013',
+  email: 'sailakshmihomefoods.vskp@gmail.com',
   phone: '099665 39144'
 };
 
@@ -48,14 +48,8 @@ const getTransporter = () => {
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
-    console.log('Email Config Check:');
-    console.log(`   Host: ${host}`);
-    console.log(`   Port: ${port}`);
-    console.log(`   User: ${user ? 'Set' : 'Missing'}`);
-    console.log(`   Pass: ${pass ? 'Set' : 'Missing'}`);
-
     if (!user || !pass) {
-      console.error('CRITICAL: Email service not configured. Set SMTP_USER and SMTP_PASS in environment variables.');
+      console.error('[email] SMTP not configured. Set SMTP_USER and SMTP_PASS.');
       return null;
     }
 
@@ -71,9 +65,7 @@ const getTransporter = () => {
 
     transporter.verify((error) => {
       if (error) {
-        console.error('SMTP transporter error:', error.message);
-      } else {
-        console.log('SMTP transporter verified and ready');
+        console.error('[email] SMTP verify error:', error.message);
       }
     });
   }
@@ -429,7 +421,9 @@ const sendEmail = async (to, subject, html) => {
   const transport = getTransporter();
 
   if (!transport) {
-    console.warn(`WARNING [MOCK MODE]: Email not configured. Would send to ${to}: ${subject}`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[email] SMTP not configured — skipping send to ${to}`);
+    }
     return { success: false, error: 'SMTP not configured', mock: true };
   }
 
@@ -443,7 +437,7 @@ const sendEmail = async (to, subject, html) => {
       throw new Error('SMTP_USER not configured - cannot send emails');
     }
 
-    console.log(`Sending email to ${to} | Subject: ${subject}`);
+    console.log(`[email] Sending to ${to}: ${subject}`);
 
     const customerEmail = await Promise.race([
       transport.sendMail({
@@ -462,7 +456,7 @@ const sendEmail = async (to, subject, html) => {
     ]);
 
     const duration = Date.now() - startTime;
-    console.log(`Customer email sent: ${to} | MessageID: ${customerEmail.messageId} | Duration: ${duration}ms`);
+    console.log(`[email] Sent to ${to} | ${duration}ms`);
 
     (async () => {
       try {
@@ -485,9 +479,9 @@ const sendEmail = async (to, subject, html) => {
           )
         ]);
 
-        console.log(`Admin copy sent to ${adminEmail}`);
+        console.log(`[email] Admin copy sent`);
       } catch (adminError) {
-        console.error('Admin email failed (non-critical):', adminError.message);
+        console.error('[email] Admin copy failed:', adminError.message);
       }
     })();
 
@@ -500,22 +494,7 @@ const sendEmail = async (to, subject, html) => {
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    console.error(`\nEMAIL SEND FAILED (${duration}ms)`);
-    console.error(`   Recipient: ${to}`);
-    console.error(`   Subject: ${subject}`);
-    console.error(`   Error Type: ${error.name}`);
-    console.error(`   Error Message: ${error.message}`);
-
-    if (error.message.includes('Invalid login')) {
-      console.error('   CAUSE: Wrong Gmail password or account blocked');
-      console.error('   FIX: Verify SMTP_PASS is correct Gmail App Password');
-    } else if (error.message.includes('timeout')) {
-      console.error('   CAUSE: Network timeout to SMTP server');
-      console.error('   FIX: Check if server can reach smtp.gmail.com:587');
-    } else if (error.message.includes('ECONNREFUSED')) {
-      console.error('   CAUSE: Cannot connect to SMTP server');
-      console.error('   FIX: Verify SMTP_HOST and SMTP_PORT are correct');
-    }
+    console.error(`[email] Send failed to ${to} (${duration}ms): ${error.message}`);
 
     return {
       success: false,
