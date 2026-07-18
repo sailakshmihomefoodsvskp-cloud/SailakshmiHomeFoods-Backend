@@ -85,17 +85,26 @@ app.use((_req, res, next) => {
 
 const allowedOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((u) => u.trim())
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://sailakshmi-home-foods-frontend.vercel.app',
+      'https://sailakshmihomefoods.in',
+      'https://www.sailakshmihomefoods.in',
+    ];
 
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allow server-to-server requests (no Origin header) and whitelisted origins
     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    console.warn(`[CORS] Blocked request from origin: ${origin}`);
     callback(new Error(`Origin '${origin}' is not allowed by CORS.`));
   },
   credentials: true,
   methods:  ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Type'],
+  optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
 };
 
 app.use(cors(corsOptions));
