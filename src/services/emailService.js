@@ -414,8 +414,11 @@ const renderEmailTemplate = ({
 };
 
 /**
- * Send email helper with admin notification
- * PRODUCTION-SAFE: Includes detailed error logging and timeout handling
+ * Send email helper — sends to the specified recipient only.
+ * PRODUCTION-SAFE: Includes detailed error logging and timeout handling.
+ *
+ * NOTE: Admin notifications are sent by dedicated functions (sendAdminOrderNotification,
+ * sendProductUpdateEmail). This helper NEVER sends a blind copy to any other address.
  */
 const sendEmail = async (to, subject, html) => {
   const transport = getTransporter();
@@ -430,7 +433,7 @@ const sendEmail = async (to, subject, html) => {
   const startTime = Date.now();
 
   try {
-    const fromName = process.env.SMTP_FROM_NAME || BUSINESS_INFO.name;
+    const fromName  = process.env.SMTP_FROM_NAME  || BUSINESS_INFO.name;
     const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
 
     if (!fromEmail) {
@@ -439,7 +442,7 @@ const sendEmail = async (to, subject, html) => {
 
     console.log(`[email] Sending to ${to}: ${subject}`);
 
-    const customerEmail = await Promise.race([
+    const info = await Promise.race([
       transport.sendMail({
         from: `"${fromName}" <${fromEmail}>`,
         to,
@@ -458,44 +461,15 @@ const sendEmail = async (to, subject, html) => {
     const duration = Date.now() - startTime;
     console.log(`[email] Sent to ${to} | ${duration}ms`);
 
-    (async () => {
-      try {
-        const adminSubject = `[ADMIN COPY] ${subject}`;
-        const adminEmail = process.env.ADMIN_EMAIL || 'yash.freelancer17@gmail.com';
-
-        await Promise.race([
-          transport.sendMail({
-            from: `"${fromName}" <${fromEmail}>`,
-            to: adminEmail,
-            subject: adminSubject,
-            html,
-            headers: {
-              'X-Priority': '3',
-              'X-Mailer': 'Sai Lakshmi Mailer'
-            }
-          }),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Admin email timeout')), 5000)
-          )
-        ]);
-
-        console.log(`[email] Admin copy sent`);
-      } catch (adminError) {
-        console.error('[email] Admin copy failed:', adminError.message);
-      }
-    })();
-
     return {
       success: true,
-      messageId: customerEmail.messageId,
+      messageId: info.messageId,
       duration,
       to
     };
   } catch (error) {
     const duration = Date.now() - startTime;
-
     console.error(`[email] Send failed to ${to} (${duration}ms): ${error.message}`);
-
     return {
       success: false,
       error: error.message,
@@ -675,70 +649,141 @@ export const sendOrderCancelledEmail = async (order) => {
 
 /**
  * PRODUCT UPDATE NOTIFICATION
- * Sends email when admin updates product stock/availability
- * Only triggers for stock-related changes
+ * Sends email to admin when a product's stock/price/availability changes.
+ * Recipient: process.env.ADMIN_NOTIFICATION_EMAIL (required in production)
  */
 export const sendProductUpdateEmail = async (product, changes) => {
   try {
     if (!product || !product.name) {
-      console.error('❌ sendProductUpdateEmail: Invalid product data');
+      console.error('[email] sendProductUpdateEmail: Invalid product data');
       return { success: false, error: 'Invalid product data' };
     }
 
-    // Extract what changed for subject
-    const changeDescriptions = [];
-    if (changes.inStock !== undefined) changeDescriptions.push(`is now ${changes.inStock ? 'in stock' : 'out of stock'}`);
-    if (changes.stockQuantity !== undefined) changeDescriptions.push(`stock updated to ${changes.stockQuantity || 'unlimited'}`);
-    if (changes.pricePerKg !== undefined) changeDescriptions.push(`price updated to ₹${changes.pricePerKg}/kg`);
-    if (changes.isActive !== undefined) changeDescriptions.push(`is now ${changes.isActive ? 'active' : 'inactive'}`);
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+    if (!adminEmail) {
+      console.error('[email] ADMIN_NOTIFICATION_EMAIL is not set — product update email skipped');
+      return { success: false, error: 'ADMIN_NOTIFICATION_EMAIL not configured' };
+    }
 
-    const subject = `${product.name} Update from Sai Lakshmi Home Foods`;
-    const adminEmail = process.env.ADMIN_EMAIL || 'niva2026.in@gmail.com';
-    
-    // Build info table
+    // Build change description for subject line
+    const changeDescriptions = [];
+    if (changes.inStock       !== undefined) changeDescriptions.push(`is now ${changes.inStock ? 'in stock' : 'out of stock'}`);
+    if (changes.stockQuantity !== undefined) changeDescriptions.push(`stock updated to ${changes.stockQuantity || 'unlimited'}`);
+    if (changes.pricePerKg    !== undefined) changeDescriptions.push(`price updated to ₹${changes.pricePerKg}/kg`);
+    if (changes.isActive      !== undefined) changeDescriptions.push(`is now ${changes.isActive ? 'active' : 'inactive'}`);
+
+    const subject = `[Product Update] ${product.name} — Sai Lakshmi Home Foods`;
+
     const infoRows = [
       { label: 'Product Name', value: product.name },
-      { label: 'Product ID', value: product.productId },
-      { label: 'Category', value: product.category || '-' }
+      { label: 'Product ID',   value: product.productId },
+      { label: 'Category',     value: product.category || '-' },
     ];
 
-    if (changes.inStock !== undefined) {
-      infoRows.push({ label: 'Stock Status', value: changes.inStock ? '✅ In Stock' : '❌ Out of Stock' });
-    }
-    if (changes.stockQuantity !== undefined) {
-      infoRows.push({ label: 'Quantity Available', value: changes.stockQuantity || 'Unlimited' });
-    }
-    if (changes.pricePerKg !== undefined) {
-      infoRows.push({ label: 'Price Per KG', value: `₹${changes.pricePerKg}` });
-    }
-
-    const changesSummary = renderKeyValueTable(infoRows);
+    if (changes.inStock       !== undefined) infoRows.push({ label: 'Stock Status',      value: changes.inStock ? '✅ In Stock' : '❌ Out of Stock' });
+    if (changes.stockQuantity !== undefined) infoRows.push({ label: 'Quantity Available', value: changes.stockQuantity || 'Unlimited' });
+    if (changes.pricePerKg    !== undefined) infoRows.push({ label: 'Price Per KG',       value: `₹${changes.pricePerKg}` });
 
     const html = renderEmailTemplate({
       subject,
       badgeText: 'Product Update',
       heading: `${product.name} has been updated`,
       introLines: [
-        `A product in your store has been updated:`,
-        changeDescriptions.join(' • ')
+        'A product in your store has been updated:',
+        changeDescriptions.join(' • ') || 'Fields updated',
       ],
-      summaryHtml: renderSummaryBox(changesSummary),
-      ctaLabel: 'View Product',
-      ctaUrl: BUSINESS_INFO.website
+      summaryHtml: renderSummaryBox(renderKeyValueTable(infoRows)),
+      ctaLabel: 'View Admin Panel',
+      ctaUrl: BUSINESS_INFO.website,
     });
 
-    // Send to admin
     const result = await sendEmail(adminEmail, subject, html);
-    
+
     if (result.success) {
-      console.log(`📧 Product update email sent for: ${product.name}`);
+      console.log(`[email] Product update notification sent to admin for: ${product.name}`);
     } else {
-      console.error(`📧 Product update email failed for: ${product.name}`, result.error);
+      console.error(`[email] Product update notification failed for: ${product.name}`, result.error);
     }
 
     return result;
   } catch (error) {
-    console.error('❌ sendProductUpdateEmail error:', error.message);
+    console.error('[email] sendProductUpdateEmail error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * ADMIN ORDER NOTIFICATION
+ * Sent to the admin inbox after every successful payment.
+ * Contains full order details: customer info, items, totals, payment method, delivery type.
+ * Recipient: process.env.ADMIN_NOTIFICATION_EMAIL (required in production)
+ */
+export const sendAdminOrderNotification = async (order) => {
+  try {
+    const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
+    if (!adminEmail) {
+      console.error('[email] ADMIN_NOTIFICATION_EMAIL is not set — admin notification skipped');
+      return { success: false, error: 'ADMIN_NOTIFICATION_EMAIL not configured' };
+    }
+
+    const orderId      = order?.orderId || 'N/A';
+    const customerName = order?.customer?.name  || 'Unknown';
+    const subject      = `[New Order] #${orderId} — ${customerName}`;
+
+    const deliveryLabel = {
+      local:    'Local Delivery (Visakhapatnam)',
+      outside:  'Outside Delivery',
+      in_store: 'In-Store Pickup',
+    }[order?.deliveryMethod] || order?.deliveryMethod || '-';
+
+    const summaryHtml = renderSummaryBox(`
+      ${renderKeyValueTable([
+        { label: 'Order ID',        value: orderId },
+        { label: 'Order Date',      value: formatDate(order?.createdAt, { includeTime: true }) },
+        { label: 'Payment Status',  value: order?.payment?.status === 'paid' ? '✅ Paid' : (order?.payment?.status || '-') },
+        { label: 'Payment Method',  value: formatPaymentMode(order?.payment?.method) },
+        { label: 'Delivery Type',   value: deliveryLabel },
+        { label: 'Delivery Charge', value: formatCurrency(order?.deliveryCharge ?? 0) },
+        { label: 'Discount',        value: order?.discount > 0 ? formatCurrency(order.discount) : 'None' },
+        { label: 'Coupon Used',     value: order?.couponCode || 'None' },
+      ])}
+      ${renderDivider()}
+      <p style="font-size:13px;font-weight:bold;color:${BRAND_COLORS.bodyText};margin:0 0 8px 0;">Customer Details</p>
+      ${renderKeyValueTable([
+        { label: 'Name',    value: customerName },
+        { label: 'Email',   value: order?.customer?.email   || '-' },
+        { label: 'Mobile',  value: order?.customer?.mobile  || '-' },
+        { label: 'Address', value: formatAddressHtml(order?.customer), isHtml: true },
+        { label: 'Pincode', value: order?.customer?.pincode || '-' },
+      ])}
+      ${renderItemsTable(order?.items, 'Total Amount', order?.totalAmount)}
+    `);
+
+    const html = renderEmailTemplate({
+      subject,
+      badgeText: 'New Order Received',
+      badgeInverted: true,
+      heading: `New Order — #${orderId}`,
+      introLines: [
+        `A new order has been placed by ${customerName}.`,
+        'Please review the details below and update the order status from the admin panel.',
+      ],
+      summaryHtml,
+      ctaLabel: 'Open Admin Panel',
+      ctaUrl: `${BUSINESS_INFO.website}/admin`,
+    });
+
+    const result = await sendEmail(adminEmail, subject, html);
+
+    if (result.success) {
+      console.log(`[email] Admin order notification sent for order #${orderId}`);
+    } else {
+      console.error(`[email] Admin order notification failed for order #${orderId}:`, result.error);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('[email] sendAdminOrderNotification error:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -771,5 +816,6 @@ export default {
   sendDeliveredEmail,
   sendOrderCancelledEmail,
   sendProductUpdateEmail,
+  sendAdminOrderNotification,
   testEmailConfiguration
 };

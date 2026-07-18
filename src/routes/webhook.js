@@ -14,7 +14,7 @@ import {
   markOrderPaymentFailed,
   markEmailSent,
 } from '../models/orderModel.js';
-import { sendPaymentConfirmationEmail } from '../services/emailService.js';
+import { sendPaymentConfirmationEmail, sendAdminOrderNotification } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -104,7 +104,15 @@ async function handlePaymentCaptured(payment) {
         .then(async (r) => {
           if (r.success) await markEmailSent(order.orderId, 'paymentConfirmation');
         })
-        .catch((e) => console.error('[webhook] Email error:', e.message));
+        .catch((e) => console.error('[webhook] Customer email error:', e.message));
+    }
+
+    if (!order.emailsSent?.adminNotification) {
+      sendAdminOrderNotification(order)
+        .then(async (r) => {
+          if (r.success) await markEmailSent(order.orderId, 'adminNotification');
+        })
+        .catch((e) => console.error('[webhook] Admin notification email error:', e.message));
     }
   } catch (error) {
     console.error('[webhook] handlePaymentCaptured error:', error.message);
@@ -137,7 +145,15 @@ async function handleOrderPaid(orderEntity, paymentEntity) {
         .then(async (r) => {
           if (r.success) await markEmailSent(order.orderId, 'paymentConfirmation');
         })
-        .catch((e) => console.error('[webhook] Email error:', e.message));
+        .catch((e) => console.error('[webhook] Customer email error:', e.message));
+    }
+
+    if (!order.emailsSent?.adminNotification) {
+      sendAdminOrderNotification(order)
+        .then(async (r) => {
+          if (r.success) await markEmailSent(order.orderId, 'adminNotification');
+        })
+        .catch((e) => console.error('[webhook] Admin notification email error:', e.message));
     }
   } catch (error) {
     console.error('[webhook] handleOrderPaid error:', error.message);

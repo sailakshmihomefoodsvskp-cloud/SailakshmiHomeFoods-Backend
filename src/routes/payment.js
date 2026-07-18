@@ -31,7 +31,7 @@ import {
   calculateDiscount,
   incrementCouponUsage,
 } from '../models/couponModel.js';
-import { sendPaymentConfirmationEmail } from '../services/emailService.js';
+import { sendPaymentConfirmationEmail, sendAdminOrderNotification } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -287,13 +287,22 @@ router.post('/verify', verifyToken, async (req, res) => {
       incrementCouponUsage(order.couponCode).catch(() => {});
     }
 
-    // Send confirmation email (non-blocking)
+    // Send customer confirmation email (non-blocking)
     if (!order.emailsSent?.paymentConfirmation) {
       sendPaymentConfirmationEmail(order)
         .then(async (result) => {
           if (result.success) await markEmailSent(order.orderId, 'paymentConfirmation');
         })
-        .catch((err) => console.error('[payment] Email error:', err.message));
+        .catch((err) => console.error('[payment] Customer email error:', err.message));
+    }
+
+    // Send admin notification email (non-blocking, always sends on new payment)
+    if (!order.emailsSent?.adminNotification) {
+      sendAdminOrderNotification(order)
+        .then(async (result) => {
+          if (result.success) await markEmailSent(order.orderId, 'adminNotification');
+        })
+        .catch((err) => console.error('[payment] Admin notification email error:', err.message));
     }
 
     return res.json({
